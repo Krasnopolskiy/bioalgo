@@ -26,36 +26,35 @@ def main():
     config = Config(
         bounds=(-9.6, 9.1),
         population_size=1000,
-        generations=100,
+        generations=20,
         tournament_size=3,
         crossover_rate=0.8,
-        mutation_rate=0.1,
-        elite_size=100,
-    )
-    ga = GeneticAlgorithm(
-        fitness_function=function,
-        config=config,
+        mutation_rate=0.01,
+        elite_size=10,
+        precision=15,
     )
 
-    best_solution, best_fitness = ga.run()
+    ga = GeneticAlgorithm(fitness_function=function, config=config)
 
-    logger.info("Best solution found: x = %.6f", best_solution)
-    logger.info("Function value at best solution: f(x) = %.6f", best_fitness)
+    logger.info("Running genetic algorithm optimization...")
+    ga_x, ga_f = ga.run()
+    logger.info("Genetic solution found: f(%.6f) = %.6f", ga_x, ga_f)
 
-    # Get history data including populations
     history = ga.get_history()
+    animate(config, history)
 
-    # Create animation
+
+def animate(config, history):
     output_file = os.path.join(OUTPUT_DIR, "genetic_animation.mp4")
     logger.info("Creating animation...")
     animate_population(
         generations_data=history["populations"],
         fitness_function=function,
         bounds=config.bounds,
-        title=f"Genetic Algorithm Animation - {config.generations} Generations",
+        title="Genetic Algorithm Animation - %d Generations" % config.generations,
         output_file=output_file,
     )
-    logger.info(f"Animation saved to {output_file}")
+    logger.info("Animation saved to %s", output_file)
 
 
 if __name__ == "__main__":
