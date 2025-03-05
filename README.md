@@ -1,3 +1,58 @@
+# Genetic Algorithm with Animation
+
+This project implements a genetic algorithm to find the minimum of a function, with visualization of the population's movement across generations.
+
+## Features
+
+- Genetic algorithm implementation for function optimization
+- Animation showing the movement of individuals for each generation
+- Support for different animation output formats (MP4, GIF, or PNG frames)
+
+## Requirements
+
+- Python 3.9+
+- Dependencies: numpy, matplotlib
+- Optional: ffmpeg (for MP4 animation)
+
+## Installation
+
+1. Clone the repository
+2. Install dependencies using Poetry:
+
+```bash
+poetry install
+```
+
+## Usage
+
+Run the main script:
+
+```bash
+poetry run python main.py
+```
+
+This will:
+1. Run the genetic algorithm to find the minimum of the function
+2. Generate an animation showing the population's movement across generations
+3. Save the animation to the `animations` directory
+
+## Animation Output
+
+The animation will be saved as:
+- MP4 file (if ffmpeg is available)
+- GIF file (fallback if ffmpeg is not available)
+- Series of PNG frames (last resort if other methods fail)
+
+## Configuration
+
+You can modify the genetic algorithm parameters in `main.py`:
+
+- `BOUNDS`: Search space bounds
+- `ELITE_SIZE`: Number of elite individuals to keep
+- `MUTATION_RATE`: Probability of mutation
+- `CROSSOVER_RATE`: Probability of crossover
+- `GENERATIONS`: Number of generations
+- `POPULATION_SIZE`: Size of the population
 # Генетический алгоритм
 
 Проект представляет собой реализацию генетического алгоритма для нахождения минимума функции одной переменной. Генетический алгоритм - это метод оптимизации, основанный на принципах естественного отбора и генетики.

@@ -1,122 +1,119 @@
 import random
-from typing import Callable, List, Tuple
+from typing import Callable
 
 import numpy as np
 
+from lib.config import Config
+
 
 class GeneticAlgorithm:
-    def __init__(
-        self,
-        fitness_function: Callable[[float], float],
-        bounds: Tuple[float, float],
-        population_size: int = 100,
-        generations: int = 100,
-        crossover_rate: float = 0.8,
-        mutation_rate: float = 0.1,
-        elite_size: int = 5,
-        precision: int = 32,
-    ):
+    def __init__(self, fitness_function: Callable[[float], float], config: Config):
         self.fitness_function = fitness_function
-        self.bounds = bounds
-        self.population_size = population_size
-        self.generations = generations
-        self.crossover_rate = crossover_rate
-        self.mutation_rate = mutation_rate
-        self.elite_size = elite_size
-        self.precision = precision
+        self.config = config
 
         self.best_individual_per_generation = []
         self.avg_fitness_per_generation = []
-        self.current_generation = 0
+
+        self.populations = []
+        self.decoded_populations = []
 
     def run(self) -> tuple[float, np.ndarray]:
-        population = self._initialize_population()
+        population = self.initialize()
 
-        for generation in range(self.generations):
-            self.current_generation = generation + 1
+        self.store(population)
 
-            fitness_scores = np.array([self._evaluate_fitness(individual) for individual in population])
+        for generation in range(self.config.generations):
+            population = self.process(population)
+            self.store(population)
 
-            best_idx = np.argmin(fitness_scores)
-            best_individual = self._decode_individual(population[best_idx])
-            self.best_individual_per_generation.append((best_individual, fitness_scores[best_idx]))
-            self.avg_fitness_per_generation.append(np.mean(fitness_scores))
+        fitness_scores = self.get_fitness_scores(population)
+        best_individual, best_score = self.get_best_individual(fitness_scores, population)
 
-            parents = self._select_parents(population, fitness_scores)
+        return best_individual, best_score
 
-            new_population = []
+    def process(self, population: list[np.ndarray]) -> list[np.ndarray]:
+        fitness_scores = self.get_fitness_scores(population)
+        best_individual, best_score = self.get_best_individual(fitness_scores, population)
 
-            elite_indices = np.argsort(fitness_scores)[: self.elite_size]
-            for idx in elite_indices:
-                new_population.append(population[idx])
+        self.best_individual_per_generation.append((best_individual, best_score))
+        self.avg_fitness_per_generation.append(np.mean(fitness_scores))
 
-            while len(new_population) < self.population_size:
-                if random.random() < self.crossover_rate:
-                    parent1 = random.choice(parents)
-                    parent2 = random.choice(parents)
-                    child1, child2 = self._crossover(parent1, parent2)
+        elite_indices = np.argsort(fitness_scores)[: self.config.elite_size]
 
-                    child1 = self._mutate(child1)
-                    child2 = self._mutate(child2)
+        new_population = []
+        for idx in elite_indices:
+            new_population.append(population[idx])
 
-                    new_population.append(child1)
-                    if len(new_population) < self.population_size:
-                        new_population.append(child2)
-                else:
-                    parent = random.choice(parents)
-                    child = self._mutate(parent.copy())
-                    new_population.append(child)
+        parents = self.select_parents(population, fitness_scores)
+        while len(new_population) < self.config.population_size:
+            if random.random() < self.config.crossover_rate:
+                individuals = self.crossover(parents)
+            else:
+                individual = random.choice(parents)
+                individuals = [individual.copy()]
 
-            population = new_population
+            new_population += [self.mutate(individual) for individual in individuals]
 
-        fitness_scores = np.array([self._evaluate_fitness(individual) for individual in population])
-        best_idx = np.argmin(fitness_scores)
-        best_individual = self._decode_individual(population[best_idx])
+        return new_population[: self.config.population_size]
 
-        return best_individual, fitness_scores[best_idx]
+    def crossover(self, parents: list[np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
+        parent1 = random.choice(parents)
+        parent2 = random.choice(parents)
 
-    def _initialize_population(self) -> List[np.ndarray]:
-        return [np.random.randint(0, 2, self.precision) for _ in range(self.population_size)]
+        crossover_point = random.randint(0, self.config.precision - 1)
+        child1 = np.concatenate([parent1[:crossover_point], parent2[crossover_point:]])
+        child2 = np.concatenate([parent2[:crossover_point], parent1[crossover_point:]])
 
-    def _decode_individual(self, individual: np.ndarray) -> float:
+        return child1, child2
+
+    def mutate(self, individual: np.ndarray) -> np.ndarray:
+        for i in range(len(individual)):
+            if random.random() < self.config.mutation_rate:
+                individual[i] = 1 - individual[i]
+        return individual
+
+    def decode(self, individual: np.ndarray) -> float:
         decimal_value = 0
         for bit in individual:
             decimal_value = decimal_value * 2 + bit
 
-        min_bound, max_bound = self.bounds
-        normalized_value = decimal_value / (2**self.precision - 1)
+        min_bound, max_bound = self.config.bounds
+        normalized_value = decimal_value / (2**self.config.precision - 1)
         return min_bound + normalized_value * (max_bound - min_bound)
 
-    def _evaluate_fitness(self, individual: np.ndarray) -> float:
-        x = self._decode_individual(individual)
-        return self.fitness_function(x)
+    def get_fitness_scores(self, population: list[np.ndarray]) -> np.ndarray:
+        return np.array([self.fitness(individual) for individual in population])
 
-    def _select_parents(self, population: List[np.ndarray], fitness_scores: np.ndarray) -> List[np.ndarray]:
-        tournament_size = 3
+    def get_best_individual(self, fitness_scores: np.ndarray, population: list[np.ndarray]) -> tuple[float, np.ndarray]:
+        best_idx = np.argmin(fitness_scores)
+        best_individual = self.decode(population[best_idx])
+        return best_individual, fitness_scores[best_idx]
+
+    def select_parents(self, population: list[np.ndarray], fitness_scores: np.ndarray) -> list[np.ndarray]:
         parents = []
 
-        for _ in range(self.population_size):
-            tournament_indices = np.random.choice(len(population), tournament_size, replace=False)
-            tournament_fitnesses = [fitness_scores[i] for i in tournament_indices]
-            winner_idx = tournament_indices[np.argmin(tournament_fitnesses)]
+        for _ in range(self.config.population_size):
+            indices = np.random.choice(len(population), self.config.tournament_size, replace=False)
+            fitnesses = [fitness_scores[i] for i in indices]
+            winner_idx = indices[np.argmin(fitnesses)]
             parents.append(population[winner_idx])
 
         return parents
 
-    def _crossover(self, parent1: np.ndarray, parent2: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        crossover_point = random.randint(0, self.precision - 1)
-        child1 = np.concatenate([parent1[:crossover_point], parent2[crossover_point:]])
-        child2 = np.concatenate([parent2[:crossover_point], parent1[crossover_point:]])
-        return child1, child2
+    def fitness(self, individual: np.ndarray) -> float:
+        x = self.decode(individual)
+        return self.fitness_function(x)
 
-    def _mutate(self, individual: np.ndarray) -> np.ndarray:
-        for i in range(len(individual)):
-            if random.random() < self.mutation_rate:
-                individual[i] = 1 - individual[i]
-        return individual
+    def initialize(self) -> list[np.ndarray]:
+        return [np.random.randint(0, 2, self.config.precision) for _ in range(self.config.population_size)]
+
+    def store(self, population: list[np.ndarray]):
+        self.populations.append(population.copy())
+        self.decoded_populations.append([self.decode(individual) for individual in population])
 
     def get_history(self):
         return {
             "best_individuals": self.best_individual_per_generation,
             "avg_fitness": self.avg_fitness_per_generation,
+            "populations": self.decoded_populations,
         }
