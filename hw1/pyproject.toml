@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "genetic_algorithm"
+name = "hw1"
 version = "0.1.0"
 package-mode = false
 description = "Simple genetic algorithm for finding minimum of a function"

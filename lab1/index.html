@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Пчелиный алгоритм для факторизации</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="container py-3">
+    <div class="row mb-2">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body py-3">
+                    <h1 class="card-title text-center mb-3">Пчелиный алгоритм факторизации</h1>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span>Алгоритм основан на природном поведении пчелиной колонии, где пчелы-разведчики исследуют различные области, а рабочие пчелы детально изучают перспективные участки.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white text-dark">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Статистика и результаты</h5>
+                </div>
+                <div class="card-body py-3">
+                    <div class="row h-100">
+                        <div class="col-md-8">
+                            <div class="row g-2 h-100">
+                                <div class="col-md-3 col-6 h-100">
+                                    <div class="stat-card">
+                                        <div class="stat-icon"><i class="fas fa-sync-alt"></i></div>
+                                        <div class="stat-value" id="iterations">0</div>
+                                        <div class="stat-label">Итераций</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6 h-100">
+                                    <div class="stat-card">
+                                        <div class="stat-icon"><i class="fas fa-hashtag"></i></div>
+                                        <div class="stat-value" id="primesFound">0</div>
+                                        <div class="stat-label">Простых чисел</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6 h-100">
+                                    <div class="stat-card">
+                                        <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
+                                        <div class="stat-value" id="bestPrecision">-</div>
+                                        <div class="stat-label">Точность</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6 h-100">
+                                    <div class="stat-card">
+                                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                                        <div class="stat-value" id="executionTime">00:00.00</div>
+                                        <div class="stat-label">Время работы</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex h-100">
+                            <div class="mt-3 mt-md-0 w-100" id="resultPanel">
+                                <div class="status-block" id="statusBlock">
+                                    <div class="status-icon" id="statusIcon"><i class="fas fa-pause-circle"></i></div>
+                                    <div class="status-text" id="statusText">Алгоритм не запущен</div>
+                                </div>
+                                <div class="border rounded bg-light" id="factorizationResult"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col-lg-4 mb-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white text-dark">
+                    <h5 class="mb-0"><i class="fas fa-sliders me-2"></i> Параметры алгоритма</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label" for="number">Составное число N:</label>
+                            <input class="form-control" id="number" min="4" type="number" value="15589">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="intervalStart">Начало интервала:</label>
+                            <div class="d-flex flex-column">
+                                <input class="form-control" id="intervalStart" min="2" type="number">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="intervalEnd">Конец интервала:</label>
+                            <div class="d-flex flex-column">
+                                <input class="form-control" id="intervalEnd" min="2" type="number">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="scouts">Пчелы-разведчики:</label>
+                            <div class="d-flex flex-column">
+                                <input class="form-control" id="scouts" max="10" min="1" type="number" value="2">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="workers">Рабочие пчелы:</label>
+                            <div class="d-flex flex-column">
+                                <input class="form-control" id="workers" max="20" min="1" type="number" value="5">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="sites">Исследуемые участки:</label>
+                            <div class="d-flex flex-column">
+                                <input class="form-control" id="sites" max="10" min="1" type="number" value="2">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="precision">Точность (ε):</label>
+                            <div class="d-flex flex-column">
+                                <input class="form-control" id="precision" max="1" min="0.0000001" step="0.001"
+                                       type="number" value="0.001">
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <label class="form-label" for="speed">Скорость визуализации: <span id="speedValue">5x</span></label>
+                            <input class="form-range" id="speed" max="10" min="1" type="range" value="5">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" id="startBtn"><i class="fas fa-play me-2"></i>Запустить алгоритм
+                        </button>
+                        <button class="btn btn-danger" id="stopBtn" style="display: none;"><i
+                                class="fas fa-stop me-2"></i>Остановить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="row">
+                <!-- Визуализация поиска -->
+                <div class="col-12 mb-2">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white text-dark">
+                            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> Визуализация поиска</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-12 d-none">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary me-1" id="zoomIn"><i
+                                                    class="fas fa-search-plus"></i></button>
+                                            <button class="btn btn-sm btn-outline-primary me-1" id="zoomOut"><i
+                                                    class="fas fa-search-minus"></i></button>
+                                            <button class="btn btn-sm btn-outline-secondary" id="resetZoom">Сброс
+                                            </button>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-secondary me-1"
+                                                    id="pauseVisualization">
+                                                <i class="fas fa-pause"></i> Пауза
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" id="toggleTrails">
+                                                <i class="fas fa-route"></i> Скрыть следы
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap justify-content-center gap-3 mb-2" id="legendContainer">
+                                <div class="legend-item">
+                                    <div class="legend-color scout-color"></div>
+                                    <span>Пчелы-разведчики</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color worker-color"></div>
+                                    <span>Рабочие пчелы</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color prime-color"></div>
+                                    <span>Простые числа</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color best-prime-color"></div>
+                                    <span>Лучший делитель</span>
+                                </div>
+                            </div>
+
+                            <div class="position-relative" id="numberLineContainer">
+                                <div class="position-relative" id="numberLine"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted" id="minLabel"></small>
+                                <small class="text-muted" id="maxLabel"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- График функции качества -->
+                <div class="col-12 mb-2">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white text-dark">
+                            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> График функции качества</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="position: relative; height: 180px; width: 100%;">
+                                <canvas id="fitnessChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Найденные числа -->
+                <div class="col-12 mb-2">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white text-dark">
+                            <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i> Найденные числа</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2" id="foundPrimesList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/bee-algorithm.js"></script>
+<script src="js/visualization.js"></script>
+</body>
+</html> 
